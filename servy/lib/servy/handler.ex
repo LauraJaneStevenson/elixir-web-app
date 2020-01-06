@@ -32,31 +32,41 @@ defmodule Servy.Handler do
 
     # put variables into map
     # last expression so it gets returned
-    %{ method: method, path: path, resp_body: ""}
+    %{ method: method,
+       path: path,
+       resp_body: "",
+       status: nil,
+       sm: ""
+     }
   end
 
   def route(conv) do
     # program will pattern match to get the
     # correct route function for path
-    route(conv, conv.path)
+    route(conv, conv.method, conv.path)
 
   end
 
-  def route(conv, "/wildthings") do
+  def route(conv, "GET", "/wildthings") do
     # add value to resp_body key by creating a new map
-    %{ conv | resp_body: "Bears, Lions, Tigers"}
+    %{ conv | status: 200, sm: "OK", resp_body: "Bears, Lions, Tigers"}
   end
 
-  def route(conv, "/bears") do
+  def route(conv, "GET", "/bears") do
     # add value to resp_body key by creating a new map
-    %{ conv | resp_body: "Grizzly,Teddy"}
+    %{ conv | status: 200, sm: "OK", resp_body: "Grizzly,Teddy"}
+  end
+
+  # route to handle paths that don't exist
+  def route(conv, _method, path) do
+    %{ conv | status: 404, sm: "NOT FOUND",resp_body: "No #{path} here!"}
   end
 
 
   def format_response(conv) do
     # use values on the map to create an HTTP reponse
     """
-    HTTP/1.1 200 OK
+    HTTP/1.1 #{conv.status} #{conv.sm}
     Content-Type: text/html
     Content-Length: #{String.length(conv.resp_body)}
 
@@ -67,7 +77,31 @@ defmodule Servy.Handler do
 end
 
 request = """
+GET /wildthings HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handle(request)
+
+IO.puts response
+
+request = """
 GET /bears HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handle(request)
+
+IO.puts response
+
+request = """
+GET /bigfoot HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
