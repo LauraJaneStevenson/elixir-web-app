@@ -14,10 +14,9 @@ defmodule Servy.Handler do
     |> format_response
   end
 
-  # print and return given data structure(conv) unchanged
+  # print and return given data structure (conv) unchanged
   # in singleline function
   def log(conv), do: IO.inspect conv
-
 
   def parse(request) do
 
@@ -37,10 +36,22 @@ defmodule Servy.Handler do
   end
 
   def route(conv) do
+    # program will pattern match to get the
+    # correct route function for path
+    route(conv, conv.path)
 
+  end
+
+  def route(conv, "/wildthings") do
     # add value to resp_body key by creating a new map
     %{ conv | resp_body: "Bears, Lions, Tigers"}
   end
+
+  def route(conv, "/bears") do
+    # add value to resp_body key by creating a new map
+    %{ conv | resp_body: "Grizzly,Teddy"}
+  end
+
 
   def format_response(conv) do
     # use values on the map to create an HTTP reponse
@@ -56,7 +67,7 @@ defmodule Servy.Handler do
 end
 
 request = """
-GET /wildthings HTTP/1.1
+GET /bears HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
