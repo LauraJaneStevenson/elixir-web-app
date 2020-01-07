@@ -9,6 +9,7 @@ defmodule Servy.Handler do
     # passed in as first argument to following function
     request
     |> parse
+    |> rewrite_path
     |> log
     |> route
     |> format_response
@@ -35,10 +36,19 @@ defmodule Servy.Handler do
     %{ method: method,
        path: path,
        resp_body: "",
-       status: nil,
-       sm: ""
+       status: nil
      }
   end
+
+  # function that changes path wildlife to wildthings
+  # only matches if conv.path is "/wildlife"
+  def rewrite_path(%{ path: "/wildlife"} = conv) do
+    %{ conv | path: "/wildthings" }
+  end
+
+  # one line function that handles all paths not /wildlife
+  def rewrite_path(conv), do: conv
+
 
   def route(conv) do
     # program will pattern match to get the
@@ -49,29 +59,49 @@ defmodule Servy.Handler do
 
   def route(conv, "GET", "/wildthings") do
     # add value to resp_body key by creating a new map
-    %{ conv | status: 200, sm: "OK", resp_body: "Bears, Lions, Tigers"}
+    %{ conv | status: 200, resp_body: "Bears, Lions, Tigers"}
   end
 
   def route(conv, "GET", "/bears") do
     # add value to resp_body key by creating a new map
-    %{ conv | status: 200, sm: "OK", resp_body: "Grizzly,Teddy"}
+    %{ conv | status: 200, resp_body: "Grizzly,Teddy"}
+  end
+
+  # route for individual bears with ids
+  def route(conv, "GET", "/bears/" <> id) do
+    # add value to resp_body key by creating a new map
+    %{ conv | status: 200, resp_body: "Bear #{id}"}
   end
 
   # route to handle paths that don't exist
   def route(conv, _method, path) do
-    %{ conv | status: 404, sm: "NOT FOUND",resp_body: "No #{path} here!"}
+    %{ conv | status: 404, resp_body: "No #{path} here!"}
   end
-
 
   def format_response(conv) do
     # use values on the map to create an HTTP reponse
     """
-    HTTP/1.1 #{conv.status} #{conv.sm}
+    HTTP/1.1 #{conv.status} #{status_reason(conv.status)}
     Content-Type: text/html
     Content-Length: #{String.length(conv.resp_body)}
 
     #{conv.resp_body}
     """
+  end
+
+  # defp for private function can't call outside module
+  defp status_reason(code) do
+    # map of status messages
+    # use arrow syntax to bind key to value
+    # keys here numbers not atoms
+    %{
+      200 => "OK",
+      201 => "Created",
+      401 => "Unauthorized",
+      403 => "Forbidden",
+      404 => "Not Found",
+      500 => "internal Server Error"
+    }[code]
   end
 
 end
@@ -102,6 +132,18 @@ IO.puts response
 
 request = """
 GET /bigfoot HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handle(request)
+
+IO.puts response
+
+request = """
+GET /wildlife HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
