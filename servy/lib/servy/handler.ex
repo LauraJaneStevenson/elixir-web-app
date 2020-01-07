@@ -84,6 +84,20 @@ defmodule Servy.Handler do
     %{ conv | status: 200, resp_body: "Bear #{id}"}
   end
 
+  def route(%{method: "GET", path: "/about"} = conv) do
+
+    case File.read("../pages/about.html") do
+
+      {:ok, content} ->
+        %{ conv | status: 200, resp_body: content}
+      {:error, enoent} ->
+        %{ conv | status: 404, resp_body: "File not found!"}
+      {:error, reason} ->
+        %{ conv | status: 500, resp_body: "File error: #{reason}"}
+    end
+
+  end
+
   # route to handle paths that don't exist
   def route(%{ path: path} = conv) do
     %{ conv | status: 404, resp_body: "No #{path} here!"}
