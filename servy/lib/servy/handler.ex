@@ -12,11 +12,22 @@ defmodule Servy.Handler do
     |> rewrite_path
     |> log
     |> route
+    |> track
     |> format_response
   end
 
+  # if argument coming in contains a status of 404
+  # execute this function
+  def track(%{status: 404, path: path } = conv) do
+    IO.puts "WARNING: #{path} is on the loose!"
+    conv
+  end
+
+  # singleline function to handle non 404 statuses
+  def track(conv), do: conv
+
   # print and return given data structure (conv) unchanged
-  # in singleline function
+  # in single line function
   def log(conv), do: IO.inspect conv
 
   def parse(request) do
@@ -50,31 +61,31 @@ defmodule Servy.Handler do
   def rewrite_path(conv), do: conv
 
 
-  def route(conv) do
-    # program will pattern match to get the
-    # correct route function for path
-    route(conv, conv.method, conv.path)
+  # def route(conv) do
+  #   # program will pattern match to get the
+  #   # correct route function for path
+  #   route(conv, conv.method, conv.path)
+  #
+  # end
 
-  end
-
-  def route(conv, "GET", "/wildthings") do
+  def route(%{ method: "GET", path: "/wildthings" } = conv) do
     # add value to resp_body key by creating a new map
     %{ conv | status: 200, resp_body: "Bears, Lions, Tigers"}
   end
 
-  def route(conv, "GET", "/bears") do
+  def route(%{ method: "GET", path: "/bears" } = conv) do
     # add value to resp_body key by creating a new map
     %{ conv | status: 200, resp_body: "Grizzly,Teddy"}
   end
 
   # route for individual bears with ids
-  def route(conv, "GET", "/bears/" <> id) do
+  def route(%{ method: "GET", path: "/bears/" <> id } = conv) do
     # add value to resp_body key by creating a new map
     %{ conv | status: 200, resp_body: "Bear #{id}"}
   end
 
   # route to handle paths that don't exist
-  def route(conv, _method, path) do
+  def route(%{ path: path} = conv) do
     %{ conv | status: 404, resp_body: "No #{path} here!"}
   end
 
