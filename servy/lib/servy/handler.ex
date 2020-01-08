@@ -1,9 +1,9 @@
 defmodule Servy.Handler do
-  def handle(request) do
-    # conv = parse(request)
-    # conv = route(conv)
-    # format_response(conv)
+  @moduledoc "Handles HTTP requests."
+  # module attributes
+  @pages_path Path.expand("../pages", __DIR__)
 
+  def handle(request) do
     # create pipeline to call each function
     # return value of previous function is
     # passed in as first argument to following function
@@ -18,6 +18,7 @@ defmodule Servy.Handler do
 
   # if argument coming in contains a status of 404
   # execute this function
+  @doc "Logs 404 request"
   def track(%{status: 404, path: path } = conv) do
     IO.puts "WARNING: #{path} is on the loose!"
     conv
@@ -86,12 +87,12 @@ defmodule Servy.Handler do
   def route(%{method: "GET", path: "/about"} = conv) do
     # get absolute path of file and bing to file variable
     file =
-      Path.expand("../pages", __DIR__)
+      @pages_path
       |> Path.join("about.html")
       |>File.read  # this will retunr a tuple {:OK, content} {:error,reason}
       |> handle_file(conv)
   end
-
+  # pattern match to call correct function
   def handle_file({:ok, content}, conv) do
     %{ conv | status: 200, resp_body: content}
   end
@@ -103,6 +104,7 @@ defmodule Servy.Handler do
   def handle_file({:error, reason}, conv) do
     %{ conv | status: 500, resp_body: "File error: #{reason}"}
   end
+
   # def route(%{method: "GET", path: "/about"} = conv) do
   #   # get absolute path of file and bing to file variable
   #   file =
