@@ -1,7 +1,12 @@
 defmodule Servy.Parser do
-  def parse(request) do
 
-    # parse request str and create map
+  # alias so we can refer to Servy.Conv as Conv
+  alias Servy.Conv, as: Conv
+  # shortcut
+  # alias Servy.Conv
+
+  def parse(request) do
+    # parse request str and add vals to struct
     # get first line of request
     # split first line into list of words and store each in variable
     [method, path, _] =
@@ -10,12 +15,11 @@ defmodule Servy.Parser do
       |> List.first
       |> String.split(" ")
 
-    # put variables into map
+    # put variables into struct
     # last expression so it gets returned
-    %{ method: method,
-       path: path,
-       resp_body: "",
-       status: nil
+    %Conv{
+      method: method,
+      path: path,
      }
   end
 end

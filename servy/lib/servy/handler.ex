@@ -3,6 +3,7 @@ defmodule Servy.Handler do
   # module attributes
   @pages_path Path.expand("../pages", __DIR__)
 
+  alias Servy.Conv
   # import needed functions from other module
   # Syntax:
   # import Mod_Name only: [func_name: num_args, func_name: num_args, ..]
@@ -22,22 +23,22 @@ defmodule Servy.Handler do
     |> format_response
   end
 
-  def route(%{ method: "GET", path: "/wildthings" } = conv) do
+  def route(%Conv{ method: "GET", path: "/wildthings" } = conv) do
     # add value to resp_body key by creating a new map
     %{ conv | status: 200, resp_body: "Bears, Lions, Tigers"}
   end
 
-  def route(%{ method: "GET", path: "/bears" } = conv) do
+  def route(%Conv{ method: "GET", path: "/bears" } = conv) do
     # add value to resp_body key by creating a new map
     %{ conv | status: 200, resp_body: "Grizzly,Teddy"}
   end
 
   # route for individual bears with ids
-  def route(%{ method: "GET", path: "/bears/" <> id } = conv) do
+  def route(%Conv{ method: "GET", path: "/bears/" <> id } = conv) do
     # add value to resp_body key by creating a new map
     %{ conv | status: 200, resp_body: "Bear #{id}"}
   end
-  def route(%{method: "GET", path: "/about"} = conv) do
+  def route(%Conv{method: "GET", path: "/about"} = conv) do
     # get absolute path of file and bing to file variable
     file =
       @pages_path
@@ -78,11 +79,11 @@ defmodule Servy.Handler do
   # end
 
   # route to handle paths that don't exist
-  def route(%{ path: path} = conv) do
+  def route(%Conv{ path: path} = conv) do
     %{ conv | status: 404, resp_body: "No #{path} here!"}
   end
 
-  def format_response(conv) do
+  def format_response(%Conv{} = conv) do
     # use values on the map to create an HTTP reponse
     """
     HTTP/1.1 #{conv.status} #{status_reason(conv.status)}
