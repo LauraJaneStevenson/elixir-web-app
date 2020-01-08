@@ -1,31 +1,3 @@
-defmodule Servy.Plugins do
-
-  # if argument coming in contains a status of 404
-  # execute this function
-  @doc "Logs 404 request"
-  def track(%{status: 404, path: path } = conv) do
-    IO.puts "WARNING: #{path} is on the loose!"
-    conv
-  end
-
-  # singleline function to handle non 404 statuses
-  def track(conv), do: conv
-
-  # function that changes path wildlife to wildthings
-  # only matches if conv.path is "/wildlife"
-  def rewrite_path(%{ path: "/wildlife"} = conv) do
-    %{ conv | path: "/wildthings" }
-  end
-
-  # one line function that handles all paths not /wildlife
-  def rewrite_path(conv), do: conv
-
-  # print and return given data structure (conv) unchanged
-  # in single line function
-  def log(conv), do: IO.inspect conv
-
-end
-
 defmodule Servy.Handler do
   @moduledoc "Handles HTTP requests."
   # module attributes
@@ -35,6 +7,7 @@ defmodule Servy.Handler do
   # Syntax:
   # import Mod_Name only: [func_name: num_args, func_name: num_args, ..]
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
+  import Servy.Parser, only: [parse: 1]
 
   def handle(request) do
     # create pipeline to call each function
@@ -47,27 +20,6 @@ defmodule Servy.Handler do
     |> route
     |> track
     |> format_response
-  end
-
-  def parse(request) do
-
-    # parse request str and create map
-
-    # get first line of request
-    # split first line into list of words and store each in variable
-    [method, path, _] =
-      request
-      |> String.split("\n")
-      |> List.first
-      |> String.split(" ")
-
-    # put variables into map
-    # last expression so it gets returned
-    %{ method: method,
-       path: path,
-       resp_body: "",
-       status: nil
-     }
   end
 
   def route(%{ method: "GET", path: "/wildthings" } = conv) do
