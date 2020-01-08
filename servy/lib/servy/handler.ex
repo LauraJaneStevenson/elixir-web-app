@@ -83,23 +83,44 @@ defmodule Servy.Handler do
     # add value to resp_body key by creating a new map
     %{ conv | status: 200, resp_body: "Bear #{id}"}
   end
-
   def route(%{method: "GET", path: "/about"} = conv) do
-
-    case File.read("../pages/about.html") do
-      # get absolute path of file
-      pages_path = Path.expand("../../pages" __DIR__)
-      file = Path.join(pages_path,"about.html")
-      
-      {:ok, content} ->
-        %{ conv | status: 200, resp_body: content}
-      {:error, enoent} ->
-        %{ conv | status: 404, resp_body: "File not found!"}
-      {:error, reason} ->
-        %{ conv | status: 500, resp_body: "File error: #{reason}"}
-    end
-
+    # get absolute path of file and bing to file variable
+    file =
+      Path.expand("../pages", __DIR__)
+      |> Path.join("about.html")
+      |>File.read  # this will retunr a tuple {:OK, content} {:error,reason}
+      |> handle_file(conv)
   end
+
+  def handle_file({:ok, content}, conv) do
+    %{ conv | status: 200, resp_body: content}
+  end
+
+  def handle_file({:error, enoent}, conv) do
+    %{ conv | status: 404, resp_body: "File not found!"}
+  end
+
+  def handle_file({:error, reason}, conv) do
+    %{ conv | status: 500, resp_body: "File error: #{reason}"}
+  end
+  # def route(%{method: "GET", path: "/about"} = conv) do
+  #   # get absolute path of file and bing to file variable
+  #   file =
+  #     Path.expand("../pages", __DIR__)
+  #     |> Path.join("about.html")
+  #
+  #   # pass file into case expresson
+  #   case File.read(file) do
+  #     {:ok, content} ->
+  #       %{ conv | status: 200, resp_body: content}
+  #     {:error, enoent} ->
+  #       %{ conv | status: 404, resp_body: "File not found!"}
+  #     # most general case on bottom
+  #     {:error, reason} ->
+  #       %{ conv | status: 500, resp_body: "File error: #{reason}"}
+  #   end
+  #
+  # end
 
   # route to handle paths that don't exist
   def route(%{ path: path} = conv) do
@@ -172,6 +193,19 @@ IO.puts response
 
 request = """
 GET /wildlife HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handle(request)
+
+IO.puts response
+
+
+request = """
+GET /about HTTP/1.1
 Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
