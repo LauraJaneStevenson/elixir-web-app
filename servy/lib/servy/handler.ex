@@ -1,7 +1,40 @@
+defmodule Servy.Plugins do
+
+  # if argument coming in contains a status of 404
+  # execute this function
+  @doc "Logs 404 request"
+  def track(%{status: 404, path: path } = conv) do
+    IO.puts "WARNING: #{path} is on the loose!"
+    conv
+  end
+
+  # singleline function to handle non 404 statuses
+  def track(conv), do: conv
+
+  # function that changes path wildlife to wildthings
+  # only matches if conv.path is "/wildlife"
+  def rewrite_path(%{ path: "/wildlife"} = conv) do
+    %{ conv | path: "/wildthings" }
+  end
+
+  # one line function that handles all paths not /wildlife
+  def rewrite_path(conv), do: conv
+
+  # print and return given data structure (conv) unchanged
+  # in single line function
+  def log(conv), do: IO.inspect conv
+
+end
+
 defmodule Servy.Handler do
   @moduledoc "Handles HTTP requests."
   # module attributes
   @pages_path Path.expand("../pages", __DIR__)
+
+  # import needed functions from other module
+  # Syntax:
+  # import Mod_Name only: [func_name: num_args, func_name: num_args, ..]
+  import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
 
   def handle(request) do
     # create pipeline to call each function
@@ -15,21 +48,6 @@ defmodule Servy.Handler do
     |> track
     |> format_response
   end
-
-  # if argument coming in contains a status of 404
-  # execute this function
-  @doc "Logs 404 request"
-  def track(%{status: 404, path: path } = conv) do
-    IO.puts "WARNING: #{path} is on the loose!"
-    conv
-  end
-
-  # singleline function to handle non 404 statuses
-  def track(conv), do: conv
-
-  # print and return given data structure (conv) unchanged
-  # in single line function
-  def log(conv), do: IO.inspect conv
 
   def parse(request) do
 
@@ -51,23 +69,6 @@ defmodule Servy.Handler do
        status: nil
      }
   end
-
-  # function that changes path wildlife to wildthings
-  # only matches if conv.path is "/wildlife"
-  def rewrite_path(%{ path: "/wildlife"} = conv) do
-    %{ conv | path: "/wildthings" }
-  end
-
-  # one line function that handles all paths not /wildlife
-  def rewrite_path(conv), do: conv
-
-
-  # def route(conv) do
-  #   # program will pattern match to get the
-  #   # correct route function for path
-  #   route(conv, conv.method, conv.path)
-  #
-  # end
 
   def route(%{ method: "GET", path: "/wildthings" } = conv) do
     # add value to resp_body key by creating a new map
