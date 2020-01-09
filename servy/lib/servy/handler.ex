@@ -38,6 +38,13 @@ defmodule Servy.Handler do
     # add value to resp_body key by creating a new map
     %{ conv | status: 200, resp_body: "Bear #{id}"}
   end
+
+  # route for individual bears with ids
+  def route(%Conv{ method: "POST", path: "/bears"} = conv) do
+    # add value to resp_body key by creating a new map
+    %{ conv | status: 201, resp_body: "I created a bear!"}
+  end
+
   def route(%Conv{method: "GET", path: "/about"} = conv) do
     # get absolute path of file and bing to file variable
     file =
@@ -85,28 +92,14 @@ defmodule Servy.Handler do
 
   def format_response(%Conv{} = conv) do
     # use values on the map to create an HTTP reponse
+    # HTTP/1.1 #{conv.status} #{status_reason(conv.status)}
     """
-    HTTP/1.1 #{conv.status} #{status_reason(conv.status)}
+
     Content-Type: text/html
     Content-Length: #{String.length(conv.resp_body)}
 
     #{conv.resp_body}
     """
-  end
-
-  # defp for private function can't call outside module
-  defp status_reason(code) do
-    # map of status messages
-    # use arrow syntax to bind key to value
-    # keys here numbers not atoms
-    %{
-      200 => "OK",
-      201 => "Created",
-      401 => "Unauthorized",
-      403 => "Forbidden",
-      404 => "Not Found",
-      500 => "internal Server Error"
-    }[code]
   end
 
 end
@@ -166,6 +159,21 @@ Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
 
+"""
+
+response = Servy.Handler.handle(request)
+
+IO.puts response
+
+
+
+request = """
+POST /bears HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+
+name=Baloo&type=Brown
 """
 
 response = Servy.Handler.handle(request)

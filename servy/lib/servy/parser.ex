@@ -8,12 +8,10 @@ defmodule Servy.Parser do
   def parse(request) do
     # parse request str and add vals to struct
     # get first line of request
+    [top, params_string] = String.split(request,"\n\n")
+    [request_line | header_lines] = String.split(top,"\n")
     # split first line into list of words and store each in variable
-    [method, path, _] =
-      request
-      |> String.split("\n")
-      |> List.first
-      |> String.split(" ")
+    [method, path, _] = String.split(request_line, " ")
 
     # put variables into struct
     # last expression so it gets returned
